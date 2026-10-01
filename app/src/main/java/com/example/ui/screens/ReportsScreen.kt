@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -122,6 +125,9 @@ fun ReportsScreen(
             onOpenBadge = { viewModel.openStudentBadge(selectedStudentReport!!.student) },
             onExportReport = { context ->
                 viewModel.exportStudentReport(context, selectedStudentReport!!)
+            },
+            onExportAbsencesExcel = { context ->
+                viewModel.exportStudentAbsencesExcel(context, selectedStudentReport!!)
             },
             onUpdateRecord = { sessionId, studentId, gradeId, status, note ->
                 viewModel.updateSessionRecord(sessionId, studentId, gradeId, status, note)
@@ -445,6 +451,7 @@ private fun StudentReportDetailView(
     onBack: () -> Unit,
     onOpenBadge: () -> Unit,
     onExportReport: (android.content.Context) -> Unit,
+    onExportAbsencesExcel: (android.content.Context) -> Unit,
     onUpdateRecord: (sessionId: Long, studentId: Long, gradeId: Long, status: String, note: String) -> Unit
 ) {
     BackHandler { onBack() }
@@ -738,6 +745,92 @@ private fun StudentReportDetailView(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+            }
+
+            // Botón de Reporte de Inasistencias en Excel (Sesión, Fecha y Docente)
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onExportAbsencesExcel(context) }
+                        .testTag("export_absences_excel_card"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (report.absentCount > 0) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
+                        } else {
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
+                        }
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (report.absentCount > 0) MaterialTheme.colorScheme.error.copy(alpha = 0.35f)
+                        else MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (report.absentCount > 0) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.secondary
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.TableChart,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Reporte de Inasistencias (Excel)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (report.absentCount > 0) {
+                                        "${report.absentCount} inasistencia(s) • Sesión, Fecha y Docente"
+                                    } else {
+                                        "0 inasistencias • Asistencia perfecta"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { onExportAbsencesExcel(context) },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.testTag("export_absences_excel_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FileDownload,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Abrir Excel", fontSize = 12.sp)
+                        }
                     }
                 }
             }

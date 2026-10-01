@@ -111,4 +111,87 @@ object CsvExporter {
         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
     }
+
+    fun exportStudentAbsencesExcel(
+        context: Context,
+        report: com.example.data.model.StudentDetailedReport,
+        teacherName: String
+    ) {
+        val student = report.student
+        val grade = report.grade
+        val absences = report.historyItems.filter {
+            it.record == null || it.record.status == AttendanceRecordEntity.STATUS_AUSENTE
+        }
+
+        val sb = StringBuilder()
+        // UTF-8 BOM so Excel automatically handles accents and symbols cleanly
+        sb.append("\uFEFF")
+        // Excel CSV separator directive
+        sb.append("sep=;\n")
+        sb.append("REPORTE DE INASISTENCIAS DEL ESTUDIANTE\n")
+        sb.append("Estudiante;${student.fullName}\n")
+        sb.append("Matrícula;${student.studentCode}\n")
+        sb.append("Grado / Grupo;${grade?.displayName ?: "No asignado"}\n")
+        sb.append("Materia;${grade?.subject ?: "-"}\n")
+        sb.append("Total de Clases Registradas;${report.totalSessions}\n")
+        sb.append("Total de Inasistencias;${absences.size}\n")
+        sb.append("Porcentaje Global de Asistencia;${report.attendancePercentage}%\n\n")
+
+        // Mandatory columns requested:
+        // Nombre de la sesión;Fecha y hora de la sesión;Docente con el que fué dicha sesión
+        sb.append("Nombre de la sesión;Fecha y hora de la sesión;Docente con el que fué dicha sesión;Motivo / Nota\n")
+
+        if (absences.isEmpty()) {
+            sb.append("El alumno no presenta inasistencias registradas (100% Asistencia);-;$teacherName;Sin registros de falta\n")
+        } else {
+            for (item in absences) {
+                val sessionTopic = item.session.topic
+                val dateTimeStr = "${Formatters.formatDate(item.session.startTime)} ${Formatters.formatTime(item.session.startTime)}"
+                val note = item.record?.note?.ifBlank { "Inasistencia registrada" } ?: "Inasistencia registrada"
+                sb.append("\"$sessionTopic\";\"$dateTimeStr\";\"$teacherName\";\"$note\"\n")
+            }
+        }
+
+        try {
+            val safeStudentCode = student.studentCode.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val fileName = "Inasistencias_${safeStudentCode}.csv"
+            val file = java.io.File(context.cacheDir, fileName)
+            file.writeText(sb.toString(), Charsets.UTF_8)
+
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/csv")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Reporte de Inasistencias - ${student.fullName}")
+                putExtra(Intent.EXTRA_TEXT, sb.toString())
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            val chooser = Intent.createChooser(viewIntent, "Abrir reporte de inasistencias en Excel").apply {
+                putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(shareIntent))
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "Reporte de Inasistencias - ${student.fullName}")
+                putExtra(Intent.EXTRA_TEXT, sb.toString())
+            }
+            val chooser = Intent.createChooser(shareIntent, "Abrir / Compartir Reporte de Inasistencias")
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+        }
+    }
 }

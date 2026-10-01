@@ -167,4 +167,37 @@ class ExampleRobolectricTest {
         )
         assertEquals(0, summary3.attendancePercentage)
     }
+
+    @Test
+    fun testExportStudentAbsences() {
+        val student = StudentEntity(id = 1, gradeId = 1, fullName = "Sofía Castro", studentCode = "EST-01")
+        val session1 = AttendanceSessionEntity(id = 1, gradeId = 1, topic = "Álgebra Lineal", sessionCode = "QR-01")
+        val session2 = AttendanceSessionEntity(id = 2, gradeId = 1, topic = "Geometría Analítica", sessionCode = "QR-02")
+
+        val record1 = AttendanceRecordEntity(sessionId = 1, studentId = 1, gradeId = 1, status = AttendanceRecordEntity.STATUS_PRESENTE)
+        val record2 = AttendanceRecordEntity(sessionId = 2, studentId = 1, gradeId = 1, status = AttendanceRecordEntity.STATUS_AUSENTE, note = "Falta sin aviso")
+
+        val historyItems = listOf(
+            com.example.data.model.StudentSessionHistoryItem(session1, record1),
+            com.example.data.model.StudentSessionHistoryItem(session2, record2)
+        )
+
+        val report = com.example.data.model.StudentDetailedReport(
+            student = student,
+            grade = null,
+            totalSessions = 2,
+            presentCount = 1,
+            lateCount = 0,
+            justifiedCount = 0,
+            absentCount = 1,
+            historyItems = historyItems
+        )
+
+        val absences = report.historyItems.filter {
+            it.record == null || it.record.status == AttendanceRecordEntity.STATUS_AUSENTE
+        }
+        assertEquals(1, absences.size)
+        assertEquals("Geometría Analítica", absences[0].session.topic)
+        assertEquals(AttendanceRecordEntity.STATUS_AUSENTE, absences[0].record?.status)
+    }
 }

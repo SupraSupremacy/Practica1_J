@@ -321,6 +321,11 @@ class AttendanceViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun exportStudentAbsencesExcel(context: android.content.Context, report: StudentDetailedReport) {
+        val teacherName = teacherProfile.value?.name ?: "Prof. Martín Ramírez"
+        com.example.util.CsvExporter.exportStudentAbsencesExcel(context, report, teacherName)
+    }
+
     fun updateTeacherProfile(profile: TeacherProfileEntity) {
         viewModelScope.launch {
             repository.updateTeacherProfile(profile)
