@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudentDao {
+    @Query("SELECT * FROM students ORDER BY fullName ASC")
+    fun getAllStudents(): Flow<List<StudentEntity>>
+
+    @Query("SELECT * FROM students WHERE fullName LIKE '%' || :query || '%' OR studentCode LIKE '%' || :query || '%' ORDER BY fullName ASC")
+    fun searchStudents(query: String): Flow<List<StudentEntity>>
+
     @Query("SELECT * FROM students WHERE gradeId = :gradeId ORDER BY fullName ASC")
     fun getStudentsByGrade(gradeId: Long): Flow<List<StudentEntity>>
 

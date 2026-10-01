@@ -9,7 +9,9 @@ import com.example.data.model.AttendanceSessionEntity
 import com.example.data.model.GradeEntity
 import com.example.data.model.GradeWithStats
 import com.example.data.model.StudentAttendanceSummary
+import com.example.data.model.StudentDetailedReport
 import com.example.data.model.StudentEntity
+import com.example.data.model.StudentSessionHistoryItem
 import com.example.data.model.StudentWithAttendance
 import com.example.data.model.TeacherProfileEntity
 import kotlinx.coroutines.Dispatchers
@@ -108,6 +110,52 @@ class AttendanceRepository(
                     lateCount = late,
                     justifiedCount = justified,
                     absentCount = absent.coerceAtLeast(0)
+                )
+            }
+        }
+    }
+
+    // Global detailed reports for all students across all grades
+    fun getAllStudentsWithDetailedReports(): Flow<List<StudentDetailedReport>> {
+        val studentsFlow = studentDao.getAllStudents()
+        val gradesFlow = gradeDao.getAllGrades()
+        val sessionsFlow = attendanceDao.getAllSessions()
+        val recordsFlow = attendanceDao.getAllRecords()
+
+        return combine(studentsFlow, gradesFlow, sessionsFlow, recordsFlow) { students, grades, sessions, records ->
+            val gradeMap = grades.associateBy { it.id }
+            val sessionsByGrade = sessions.groupBy { it.gradeId }
+            val recordsByStudent = records.groupBy { it.studentId }
+
+            students.map { student ->
+                val grade = gradeMap[student.gradeId]
+                val gradeSessions = sessionsByGrade[student.gradeId] ?: emptyList()
+                val studentRecords = recordsByStudent[student.id] ?: emptyList()
+                val recordMap = studentRecords.associateBy { it.sessionId }
+
+                val historyItems = gradeSessions.map { session ->
+                    StudentSessionHistoryItem(
+                        session = session,
+                        record = recordMap[session.id]
+                    )
+                }.sortedByDescending { it.session.startTime }
+
+                val present = studentRecords.count { it.status == AttendanceRecordEntity.STATUS_PRESENTE }
+                val late = studentRecords.count { it.status == AttendanceRecordEntity.STATUS_RETARDO }
+                val justified = studentRecords.count { it.status == AttendanceRecordEntity.STATUS_JUSTIFICADO }
+                val explicitAbsent = studentRecords.count { it.status == AttendanceRecordEntity.STATUS_AUSENTE }
+                val unrecordedAbsent = (gradeSessions.size - studentRecords.size).coerceAtLeast(0)
+                val totalAbsent = explicitAbsent + unrecordedAbsent
+
+                StudentDetailedReport(
+                    student = student,
+                    grade = grade,
+                    totalSessions = gradeSessions.size,
+                    presentCount = present,
+                    lateCount = late,
+                    justifiedCount = justified,
+                    absentCount = totalAbsent,
+                    historyItems = historyItems
                 )
             }
         }

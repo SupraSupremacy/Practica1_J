@@ -9,6 +9,7 @@ import com.example.data.model.AttendanceRecordEntity
 import com.example.data.model.AttendanceSessionEntity
 import com.example.data.model.GradeEntity
 import com.example.data.model.StudentAttendanceSummary
+import com.example.data.model.StudentDetailedReport
 import com.example.data.model.StudentEntity
 import com.example.data.model.StudentWithAttendance
 import com.example.data.model.TeacherProfileEntity
@@ -126,6 +127,20 @@ class AttendanceViewModel(application: Application) : AndroidViewModel(applicati
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // All Student Reports for the "Reportes" Tab
+    val allStudentReports: StateFlow<List<StudentDetailedReport>> = repository.getAllStudentsWithDetailedReports()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedReportStudentId = MutableStateFlow<Long?>(null)
+    val selectedReportStudentId: StateFlow<Long?> = _selectedReportStudentId.asStateFlow()
+
+    val selectedReportStudent: StateFlow<StudentDetailedReport?> = combine(
+        allStudentReports,
+        _selectedReportStudentId
+    ) { reports, studentId ->
+        if (studentId != null) reports.find { it.student.id == studentId } else null
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     init {
         viewModelScope.launch {
             repository.ensureDefaultDataLoaded()
@@ -165,6 +180,17 @@ class AttendanceViewModel(application: Application) : AndroidViewModel(applicati
             _selectedGradeId.value = null
             _selectedSessionId.value = null
         }
+        if (tabIndex != 2) {
+            _selectedReportStudentId.value = null
+        }
+    }
+
+    fun selectReportStudent(studentId: Long?) {
+        _selectedReportStudentId.value = studentId
+    }
+
+    fun exportStudentReport(context: android.content.Context, report: StudentDetailedReport) {
+        com.example.util.CsvExporter.exportStudentReport(context, report)
     }
 
     fun selectGrade(gradeId: Long?) {

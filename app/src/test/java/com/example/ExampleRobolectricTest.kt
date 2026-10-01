@@ -107,5 +107,14 @@ class ExampleRobolectricTest {
         val records = attendanceDao.getRecordsBySession(1).first()
         assertEquals(1, records.size)
         assertEquals(AttendanceRecordEntity.STATUS_PRESENTE, records[0].status)
+
+        // Test student search by name and code
+        val searchByName = studentDao.searchStudents("Sofía").first()
+        assertEquals(1, searchByName.size)
+        assertEquals("Sofía Castro", searchByName[0].fullName)
+
+        val searchByCode = studentDao.searchStudents("EST-01").first()
+        assertEquals(1, searchByCode.size)
+        assertEquals("EST-01", searchByCode[0].studentCode)
     }
 }

@@ -19,6 +19,7 @@ import com.example.ui.components.AppBottomNavigation
 import com.example.ui.screens.GenerateQrScreen
 import com.example.ui.screens.GradeDetailScreen
 import com.example.ui.screens.GradesScreen
+import com.example.ui.screens.ReportsScreen
 import com.example.ui.screens.SessionDetailScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.MyApplicationTheme
@@ -44,21 +45,26 @@ fun MainAttendanceApp(
     val selectedGrade by viewModel.selectedGrade.collectAsState()
     val selectedSessionId by viewModel.selectedSessionId.collectAsState()
     val selectedSession by viewModel.selectedSession.collectAsState()
+    val selectedReportStudentId by viewModel.selectedReportStudentId.collectAsState()
 
     // Handle back button for sub-screens
-    BackHandler(enabled = selectedSessionId != null) {
+    BackHandler(enabled = selectedReportStudentId != null) {
+        viewModel.selectReportStudent(null)
+    }
+
+    BackHandler(enabled = selectedReportStudentId == null && selectedSessionId != null) {
         viewModel.selectSession(null)
     }
 
-    BackHandler(enabled = selectedSessionId == null && selectedGradeId != null) {
+    BackHandler(enabled = selectedReportStudentId == null && selectedSessionId == null && selectedGradeId != null) {
         viewModel.selectGrade(null)
     }
 
-    BackHandler(enabled = selectedSessionId == null && selectedGradeId == null && currentTab != 0) {
+    BackHandler(enabled = selectedReportStudentId == null && selectedSessionId == null && selectedGradeId == null && currentTab != 0) {
         viewModel.switchTab(0)
     }
 
-    val showBottomBar = selectedGradeId == null && selectedSessionId == null
+    val showBottomBar = selectedGradeId == null && selectedSessionId == null && selectedReportStudentId == null
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -104,6 +110,9 @@ fun MainAttendanceApp(
                     }
                 }
                 2 -> {
+                    ReportsScreen(viewModel = viewModel)
+                }
+                3 -> {
                     SettingsScreen(viewModel = viewModel)
                 }
             }

@@ -1,10 +1,12 @@
 package com.example.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Class
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Class
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.School
@@ -45,6 +47,12 @@ fun AppBottomNavigation(
             selectedIcon = Icons.Filled.School,
             unselectedIcon = Icons.Outlined.School,
             testTag = "nav_tab_grades"
+        ),
+        NavItem(
+            title = "Reportes",
+            selectedIcon = Icons.Filled.Assessment,
+            unselectedIcon = Icons.Outlined.Assessment,
+            testTag = "nav_tab_reports"
         ),
         NavItem(
             title = "Ajustes",

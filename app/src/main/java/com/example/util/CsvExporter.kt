@@ -72,4 +72,43 @@ object CsvExporter {
         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
     }
+
+    fun exportStudentReport(
+        context: Context,
+        report: com.example.data.model.StudentDetailedReport
+    ) {
+        val student = report.student
+        val grade = report.grade
+        val sb = StringBuilder()
+        sb.append("REPORTE INDIVIDUAL DE ASISTENCIA\n")
+        sb.append("Estudiante;${student.fullName}\n")
+        sb.append("Matricula;${student.studentCode}\n")
+        sb.append("Grado;${grade?.displayName ?: "No asignado"}\n")
+        sb.append("Materia;${grade?.subject ?: "-"}\n")
+        sb.append("Total de Clases;${report.totalSessions}\n")
+        sb.append("Asistencias (Presente);${report.presentCount}\n")
+        sb.append("Retardos;${report.lateCount}\n")
+        sb.append("Justificados;${report.justifiedCount}\n")
+        sb.append("Inasistencias (Ausente);${report.absentCount}\n")
+        sb.append("Porcentaje de Asistencia;${report.attendancePercentage}%\n\n")
+
+        sb.append("DETALLE DE CLASES\n")
+        sb.append("Fecha;Hora;Tema;Estado;Nota\n")
+        for (item in report.historyItems) {
+            val dateStr = Formatters.formatDate(item.session.startTime)
+            val timeStr = if (item.record != null) Formatters.formatTime(item.record.timestamp) else "-"
+            val status = item.record?.status ?: "AUSENTE"
+            val note = item.record?.note ?: ""
+            sb.append("$dateStr;$timeStr;${item.session.topic};$status;\"$note\"\n")
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "Reporte de Asistencia - ${student.fullName} (${student.studentCode})")
+            putExtra(Intent.EXTRA_TEXT, sb.toString())
+        }
+        val chooser = Intent.createChooser(shareIntent, "Compartir Reporte de Estudiante")
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(chooser)
+    }
 }
