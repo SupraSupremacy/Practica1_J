@@ -116,5 +116,17 @@ class ExampleRobolectricTest {
         val searchByCode = studentDao.searchStudents("EST-01").first()
         assertEquals(1, searchByCode.size)
         assertEquals("EST-01", searchByCode[0].studentCode)
+
+        // Test updating attendance record with reason/note
+        val existingRecord = records[0]
+        attendanceDao.updateRecord(
+            existingRecord.copy(
+                status = AttendanceRecordEntity.STATUS_JUSTIFICADO,
+                note = "Presentó receta médica certificada"
+            )
+        )
+        val updatedRecords = attendanceDao.getRecordsBySession(1).first()
+        assertEquals(AttendanceRecordEntity.STATUS_JUSTIFICADO, updatedRecords[0].status)
+        assertEquals("Presentó receta médica certificada", updatedRecords[0].note)
     }
 }
