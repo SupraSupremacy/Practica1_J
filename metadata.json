@@ -1,0 +1,6 @@
+{
+  "name": "Asistencia QR",
+  "description": "Control y registro de asistencia escolar mediante códigos QR para docentes y grados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
