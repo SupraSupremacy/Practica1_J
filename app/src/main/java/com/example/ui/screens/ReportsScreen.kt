@@ -734,7 +734,7 @@ private fun StudentReportDetailView(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "Calculado sobre ${report.totalSessions} clases registradas para este grado.",
+                            text = "Calculado sobre ${report.totalSessions} clases registradas para este grado (Presentes, Retardos y Justificados cuentan como asistencia).",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

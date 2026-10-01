@@ -129,4 +129,42 @@ class ExampleRobolectricTest {
         assertEquals(AttendanceRecordEntity.STATUS_JUSTIFICADO, updatedRecords[0].status)
         assertEquals("Presentó receta médica certificada", updatedRecords[0].note)
     }
+
+    @Test
+    fun testAttendancePercentageCalculation() {
+        val student = StudentEntity(id = 1, gradeId = 1, fullName = "Test Student", studentCode = "T-01")
+
+        // 4 sessions: 1 present, 1 late, 1 justified, 1 absent -> (1+1+1)/4 = 3/4 = 75%
+        val summary1 = com.example.data.model.StudentAttendanceSummary(
+            student = student,
+            totalSessions = 4,
+            presentCount = 1,
+            lateCount = 1,
+            justifiedCount = 1,
+            absentCount = 1
+        )
+        assertEquals(75, summary1.attendancePercentage)
+
+        // Only absent does not count: 2 sessions: 1 late, 1 justified -> 2/2 = 100%
+        val summary2 = com.example.data.model.StudentAttendanceSummary(
+            student = student,
+            totalSessions = 2,
+            presentCount = 0,
+            lateCount = 1,
+            justifiedCount = 1,
+            absentCount = 0
+        )
+        assertEquals(100, summary2.attendancePercentage)
+
+        // 3 sessions: 3 absent -> 0%
+        val summary3 = com.example.data.model.StudentAttendanceSummary(
+            student = student,
+            totalSessions = 3,
+            presentCount = 0,
+            lateCount = 0,
+            justifiedCount = 0,
+            absentCount = 3
+        )
+        assertEquals(0, summary3.attendancePercentage)
+    }
 }

@@ -15,8 +15,8 @@ data class StudentAttendanceSummary(
 ) {
     val attendancePercentage: Int
         get() = if (totalSessions > 0) {
-            val attended = presentCount + (lateCount * 0.8) // Partial weight for late
-            ((attended / totalSessions) * 100).toInt().coerceIn(0, 100)
+            val attended = presentCount + lateCount + justifiedCount
+            (((attended.toDouble() / totalSessions)) * 100).toInt().coerceIn(0, 100)
         } else {
             100
         }
@@ -46,8 +46,8 @@ data class StudentDetailedReport(
 ) {
     val attendancePercentage: Int
         get() = if (totalSessions > 0) {
-            val attended = presentCount + (lateCount * 0.8)
-            ((attended / totalSessions) * 100).toInt().coerceIn(0, 100)
+            val attended = presentCount + lateCount + justifiedCount
+            (((attended.toDouble() / totalSessions)) * 100).toInt().coerceIn(0, 100)
         } else {
             100
         }

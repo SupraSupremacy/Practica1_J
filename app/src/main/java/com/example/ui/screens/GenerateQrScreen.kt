@@ -81,6 +81,7 @@ import com.example.ui.components.FullScreenQrDialog
 import com.example.ui.components.StatusBadge
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.StatusAbsentRed
+import com.example.ui.theme.StatusJustifiedBlue
 import com.example.ui.theme.StatusLateAmber
 import com.example.ui.theme.StatusPresentGreen
 import com.example.util.Formatters
@@ -107,7 +108,8 @@ fun GenerateQrScreen(
     if (isQrFullScreen && activeSession != null) {
         val presentCount = activeStudents.count {
             it.record?.status == AttendanceRecordEntity.STATUS_PRESENTE ||
-            it.record?.status == AttendanceRecordEntity.STATUS_RETARDO
+            it.record?.status == AttendanceRecordEntity.STATUS_RETARDO ||
+            it.record?.status == AttendanceRecordEntity.STATUS_JUSTIFICADO
         }
         FullScreenQrDialog(
             session = activeSession!!,
@@ -465,11 +467,13 @@ private fun ActiveSessionView(
 
     val presentCount = students.count { it.record?.status == AttendanceRecordEntity.STATUS_PRESENTE }
     val lateCount = students.count { it.record?.status == AttendanceRecordEntity.STATUS_RETARDO }
+    val justifiedCount = students.count { it.record?.status == AttendanceRecordEntity.STATUS_JUSTIFICADO }
     val absentCount = students.count { it.record?.status == AttendanceRecordEntity.STATUS_AUSENTE }
     val pendingCount = students.count { it.record == null }
     val totalCount = students.size
 
-    val progress = if (totalCount > 0) (presentCount + lateCount).toFloat() / totalCount else 0f
+    val attendedCount = presentCount + lateCount + justifiedCount
+    val progress = if (totalCount > 0) attendedCount.toFloat() / totalCount else 0f
 
     LazyColumn(
         modifier = Modifier
@@ -678,7 +682,7 @@ private fun ActiveSessionView(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Asistencia: ${presentCount + lateCount} de $totalCount (${(progress * 100).toInt()}%)",
+                            text = "Asistencia: $attendedCount de $totalCount (${(progress * 100).toInt()}%)",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
@@ -710,6 +714,7 @@ private fun ActiveSessionView(
                     ) {
                         ScoreStat(title = "Presentes", count = presentCount, color = StatusPresentGreen)
                         ScoreStat(title = "Retardos", count = lateCount, color = StatusLateAmber)
+                        ScoreStat(title = "Justificados", count = justifiedCount, color = StatusJustifiedBlue)
                         ScoreStat(title = "Ausentes", count = absentCount, color = StatusAbsentRed)
                         ScoreStat(title = "Pendientes", count = pendingCount, color = Color.Gray)
                     }
