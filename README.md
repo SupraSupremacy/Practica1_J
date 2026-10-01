@@ -3,7 +3,8 @@
 > Sistema inteligente y moderno para el pase de lista escolar mediante códigos QR proyectables, control de inasistencias y reportes en Excel, diseñado para docentes y centros educativos.
 
 ## 1. Probala ahora
-- **App publicada:** [https://ais-pre-4xhhmfhrihjx6jb4fthlkd-573257800989.us-east1.run.app](https://ais-pre-4xhhmfhrihjx6jb4fthlkd-573257800989.us-east1.run.app)
+- **Descargar APK para Android:** [AsistenciaQR-v1.0.apk](release/AsistenciaQR-v1.0.apk) (Instalable directamente en cualquier teléfono Android)
+- **App publicada en streaming:** [https://ais-pre-4xhhmfhrihjx6jb4fthlkd-573257800989.us-east1.run.app](https://ais-pre-4xhhmfhrihjx6jb4fthlkd-573257800989.us-east1.run.app)
 - **Código QR:** ![QR](evidencias/qr.png)
 - **Usuario de prueba:** No requiere credenciales. El perfil del docente se inicializa automáticamente con datos y salones de prueba preconfigurados.
 
