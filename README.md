@@ -8,9 +8,7 @@
 - **Usuario de prueba:** No requiere credenciales. El perfil del docente se inicializa automáticamente con datos y salones de prueba preconfigurados.
 
 ## 2. Capturas
-| Inicio | En uso | Con la IA trabajando |
-|---|---|---|
-| ![](evidencias/E3-celular.png) | ![](evidencias/E1-despues.png) | ![](evidencias/E5-app.png) |
+(Las capturas están en el Documento de Word en la rama principal)
 
 ## 3. Qué hace
 - **Pase de lista con QR proyectable:** Genera un código QR dinámico de alta resolución para proyectar en la pizarra o pantalla del aula, permitiendo un pase de lista rápido con temporizador ajustable.
