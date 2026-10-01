@@ -15,12 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -36,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -86,6 +91,7 @@ fun SessionDetailScreen(
     if (studentToEdit != null) {
         EditAttendanceDialog(
             item = studentToEdit!!,
+            session = session,
             onDismiss = { studentToEdit = null },
             onSave = { newStatus, note ->
                 val s = studentToEdit
@@ -233,54 +239,108 @@ fun SessionDetailScreen(
                         .clickable { studentToEdit = item }
                         .testTag("session_record_${item.student.id}"),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(Color(android.graphics.Color.parseColor(item.student.avatarColorHex))),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = item.student.fullName.firstOrNull()?.uppercase() ?: "E",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
-                        }
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(android.graphics.Color.parseColor(item.student.avatarColorHex))),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = item.student.fullName.firstOrNull()?.uppercase() ?: "E",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.student.fullName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = item.student.studentCode,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (!item.record?.note.isNullOrBlank()) {
-                                Text(
-                                    text = "Nota: ${item.record?.note}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 11.sp
-                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.student.fullName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = item.student.studentCode,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                StatusBadge(status = item.record?.status ?: AttendanceRecordEntity.STATUS_AUSENTE, compact = true)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                IconButton(
+                                    onClick = { studentToEdit = item },
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .testTag("edit_attendance_btn_${item.student.id}")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Editar asistencia",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
 
-                        StatusBadge(status = item.record?.status ?: AttendanceRecordEntity.STATUS_AUSENTE, compact = true)
+                        // Prominent Motivo / Justificación banner if recorded
+                        if (!item.record?.note.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.EditNote,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Motivo: ${item.record?.note}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Toca para modificar asistencia o registrar motivo",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
@@ -293,13 +353,15 @@ fun SessionDetailScreen(
 @Composable
 private fun EditAttendanceDialog(
     item: StudentWithAttendance,
+    session: AttendanceSessionEntity,
     onDismiss: () -> Unit,
     onSave: (String, String) -> Unit
 ) {
     var selectedStatus by remember {
-        mutableStateOf(item.record?.status ?: AttendanceRecordEntity.STATUS_PRESENTE)
+        mutableStateOf(item.record?.status ?: AttendanceRecordEntity.STATUS_AUSENTE)
     }
-    var note by remember { mutableStateOf(item.record?.note ?: "") }
+    var reason by remember { mutableStateOf(item.record?.note ?: "") }
+    var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
     val options = listOf(
         AttendanceRecordEntity.STATUS_PRESENTE to "Presente",
@@ -308,45 +370,92 @@ private fun EditAttendanceDialog(
         AttendanceRecordEntity.STATUS_AUSENTE to "Ausente"
     )
 
+    val quickReasons = listOf(
+        "Justificante médico",
+        "Llegó tarde con permiso",
+        "Permiso de dirección",
+        "Corrección de pase de lista",
+        "Actividad escolar"
+    )
+
+    val isReasonValid = reason.trim().isNotEmpty()
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Modificar Asistencia") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = item.student.fullName,
+                    text = "Modificar Asistencia",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Header context
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = item.student.fullName,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${item.student.studentCode} • ${session.topic} (${Formatters.formatDate(session.startTime)})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 Text(
                     text = "Selecciona el nuevo estado:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
 
+                // Status selectors
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     options.forEach { (statusKey, label) ->
                         val isSelected = selectedStatus == statusKey
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedStatus = statusKey },
+                                .clickable { selectedStatus = statusKey }
+                                .testTag("edit_session_dialog_select_$statusKey"),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(10.dp)
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = label,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 14.sp
                                 )
                                 StatusBadge(status = statusKey, compact = true)
                             }
@@ -354,21 +463,88 @@ private fun EditAttendanceDialog(
                     }
                 }
 
+                HorizontalDivider()
+
+                // Reason Field (MANDATORY)
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Motivo de la modificación",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "* Requerido",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Por favor explica el por qué se editó dicha asistencia para registrar la justificación.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    label = { Text("Nota o justificación (opcional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    value = reason,
+                    onValueChange = { reason = it },
+                    label = { Text("Escribe el motivo del cambio *") },
+                    placeholder = { Text("Ej. Presentó justificante médico...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("session_attendance_edit_reason_input"),
+                    minLines = 2,
+                    isError = hasAttemptedSubmit && !isReasonValid,
+                    supportingText = {
+                        if (hasAttemptedSubmit && !isReasonValid) {
+                            Text(
+                                "Se requiere dejar un mensaje del por qué se editó la asistencia.",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            Text("Campo obligatorio requerido para guardar.")
+                        }
+                    }
                 )
+
+                // Quick suggestions chips
+                Text(
+                    text = "Sugerencias rápidas de motivo:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(quickReasons) { suggestion ->
+                        SuggestionChip(
+                            onClick = {
+                                reason = if (reason.isBlank()) suggestion else "$reason - $suggestion"
+                            },
+                            label = { Text(suggestion, fontSize = 11.sp) }
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(selectedStatus, note) },
+                onClick = {
+                    hasAttemptedSubmit = true
+                    if (isReasonValid) {
+                        onSave(selectedStatus, reason.trim())
+                    }
+                },
+                enabled = isReasonValid,
                 modifier = Modifier.testTag("save_attendance_edit_btn")
             ) {
-                Text("Guardar Cambios")
+                Text("Guardar Cambio")
             }
         },
         dismissButton = {
